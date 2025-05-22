@@ -70,11 +70,13 @@ function App() {
   // Load user data from Firestore
   const loadUserData = async (uid: string) => {
     setIsLoading(true);
+    console.log("Loading user data from Firestore for UID:", uid);
     try {
       // Get user data from Firestore
       const userData = await safeFirestoreOperation(
         async () => {
           const data = await getUserDataFromFirestore(uid);
+          console.log("Retrieved user data from Firestore:", data);
           return data || null;
         },
         null
@@ -82,6 +84,7 @@ function App() {
       
       if (userData) {
         // We successfully got data from Firestore
+        console.log("Setting app state with Firestore data");
         setTotalOpc(userData.totalOpc || 0);
         setCurrentStreak(userData.currentStreak || 0);
         setSavedBudget(userData.savedBudget || 45);
@@ -89,22 +92,45 @@ function App() {
         // Try to fetch activity items from Firestore
         const firestoreActivities = await safeFirestoreOperation(
           async () => {
-            return await getActivitiesFromFirestore(uid);
+            const activities = await getActivitiesFromFirestore(uid);
+            console.log("Retrieved activities from Firestore:", activities);
+            return activities;
           },
           []
         );
         
         // If we got activities from Firestore, use them
         if (firestoreActivities && firestoreActivities.length > 0) {
+          console.log("Using activities from Firestore");
           setActivityItems(firestoreActivities);
         } else {
           // Otherwise, use localStorage for activity items
+          console.log("No activities in Firestore, using localStorage");
           const storedData = getStoredData();
           setActivityItems(storedData.activityItems);
         }
       } else {
-        // No user data found in Firestore, use localStorage
-        loadLocalData();
+        // No user data found in Firestore, create initial user data
+        console.log("No user data found in Firestore, initializing with localStorage data");
+        const storedData = getStoredData();
+        
+        // Initialize user data in Firestore with localStorage data
+        await safeFirestoreOperation(
+          async () => {
+            // Use the existing saveOpcToFirestore function which will create the document if needed
+            await saveOpcToFirestore(uid, storedData.totalOpc);
+            await updateStreakInFirestore(uid, storedData.currentStreak);
+            await updateBudgetInFirestore(uid, storedData.savedBudget || 45);
+            return true;
+          },
+          false
+        );
+        
+        // Set state with localStorage data
+        setTotalOpc(storedData.totalOpc);
+        setCurrentStreak(storedData.currentStreak);
+        setSavedBudget(storedData.savedBudget || 45);
+        setActivityItems(storedData.activityItems);
       }
     } catch (error) {
       console.error("Error loading user data:", error);

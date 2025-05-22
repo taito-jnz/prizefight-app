@@ -19,13 +19,17 @@ const LoginForm = ({ onLoginSuccess }: LoginFormProps) => {
 
     try {
       if (isLogin) {
+        console.log("Attempting to sign in user:", email);
         await signInUser(email, password);
       } else {
+        console.log("Attempting to sign up new user:", email);
         await signUpUser(email, password);
       }
       
+      console.log("Authentication successful, triggering callback");
       onLoginSuccess();
     } catch (err: any) {
+      console.error("Authentication error:", err.code, err.message);
       let errorMessage = 'Authentication failed. Please try again.';
       
       // Extract Firebase auth error message
@@ -37,6 +41,8 @@ const LoginForm = ({ onLoginSuccess }: LoginFormProps) => {
         errorMessage = 'Password is too weak';
       } else if (err.code === 'auth/invalid-email') {
         errorMessage = 'Invalid email format';
+      } else if (err.code === 'auth/invalid-credential') {
+        errorMessage = 'Invalid login credentials. Please check your email and password.';
       }
       
       setError(errorMessage);
