@@ -1,11 +1,10 @@
 // src/firebaseConfig.js
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAnalytics } from "firebase/analytics";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "GOOGLE_API_KEY_FB",
+  apiKey: "AIzaSyB99R6Muh0fwxk1zAp33gN5t7fFvNxp1_Y", // Using the API key directly
   authDomain: "prizefight-98651.firebaseapp.com",
   projectId: "prizefight-98651",
   storageBucket: "prizefight-98651.firebasestorage.app",
@@ -17,15 +16,3 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
-
-// Initialize Analytics (in browser environments only)
-let analytics = null;
-if (typeof window !== 'undefined') {
-  try {
-    analytics = getAnalytics(app);
-  } catch (error) {
-    console.warn("Analytics could not be initialized:", error);
-  }
-}
-
-export { analytics };
