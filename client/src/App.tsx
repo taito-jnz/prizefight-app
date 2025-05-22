@@ -6,6 +6,9 @@ import BudgetTracker from "./components/BudgetTracker";
 import StreakTracker from "./components/StreakTracker";
 import InvestmentSimulator from "./components/InvestmentSimulator";
 import RecentActivity from "./components/RecentActivity";
+import BankConnection from "./components/BankConnection";
+import RecurringInvestmentSettings from "./components/RecurringInvestmentSettings";
+import RealWorldInvestment from "./components/RealWorldInvestment";
 import LoginForm from "./components/Auth/LoginForm";
 import UserMenu from "./components/Auth/UserMenu";
 import Confetti from 'react-confetti';
@@ -23,6 +26,14 @@ import {
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "./firebaseConfig";
 import { onAuthStateChange, getCurrentUser } from "./services/authService";
+import { 
+  getInvestmentDataFromFirestore, 
+  connectBankAccount, 
+  updateInvestmentSettings, 
+  processInvestment,
+  getLocalInvestmentData,
+  saveLocalInvestmentData
+} from "./services/investmentService";
 
 type ActivityItem = {
   id: string;
@@ -30,6 +41,24 @@ type ActivityItem = {
   date: string;
   opcEarned: number;
 };
+
+// Investment data interface
+interface InvestmentData {
+  isConnected: boolean;
+  bankName?: string;
+  accountId?: string;
+  frequency: string;
+  enabled: boolean;
+  balance: number;
+  investmentHistory?: Array<{
+    amount: number;
+    date: string;
+    opcConverted: number;
+  }>;
+  nextScheduledDate?: string;
+  lastInvestmentAmount?: number;
+  lastInvestmentDate?: string;
+}
 
 function App() {
   const [totalOpc, setTotalOpc] = useState(0);
@@ -40,6 +69,14 @@ function App() {
   const [isOffline, setIsOffline] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  
+  // Investment states
+  const [investmentData, setInvestmentData] = useState<InvestmentData>({
+    isConnected: false,
+    frequency: 'monthly',
+    enabled: false,
+    balance: 0
+  });
   
   // Gamification states
   const [showConfetti, setShowConfetti] = useState(false);
@@ -96,6 +133,26 @@ function App() {
         },
         null
       );
+      
+      // Also load investment data
+      const investData = await safeFirestoreOperation(
+        async () => {
+          const data = await getInvestmentDataFromFirestore(uid);
+          console.log("Retrieved investment data from Firestore:", data);
+          return data || null;
+        },
+        null
+      );
+      
+      // If we have investment data in Firestore, use it
+      if (investData) {
+        console.log("Setting investment data from Firestore");
+        setInvestmentData(investData);
+      } else {
+        // Otherwise use from local storage
+        const localInvestData = getLocalInvestmentData();
+        setInvestmentData(localInvestData);
+      }
       
       if (userData) {
         // We successfully got data from Firestore
@@ -184,6 +241,10 @@ function App() {
     setCurrentStreak(storedData.currentStreak);
     setSavedBudget(storedData.savedBudget || 45);
     setActivityItems(storedData.activityItems);
+    
+    // Also load investment data from localStorage
+    const investData = getLocalInvestmentData();
+    setInvestmentData(investData);
   };
 
   const handleLoginSuccess = () => {
@@ -200,6 +261,54 @@ function App() {
     setCurrentUserId(null);
     // Reset to default state or load from localStorage
     loadLocalData();
+  };
+  
+  // Handler for connecting a bank account
+  const handleConnectBank = async (bankName: string, accountId: string) => {
+    if (!currentUserId) return;
+    
+    try {
+      const updatedData = await connectBankAccount(currentUserId, bankName, accountId);
+      setInvestmentData(updatedData);
+      
+      // Trigger celebratory confetti
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 5000);
+    } catch (error) {
+      console.error("Error connecting bank account:", error);
+    }
+  };
+  
+  // Handler for updating investment settings
+  const handleUpdateInvestmentSettings = async (frequency: string, enabled: boolean) => {
+    if (!currentUserId) return;
+    
+    try {
+      const updatedData = await updateInvestmentSettings(currentUserId, frequency, enabled);
+      setInvestmentData(updatedData);
+    } catch (error) {
+      console.error("Error updating investment settings:", error);
+    }
+  };
+  
+  // Process investment based on OPC balance
+  const processInvestmentIfNeeded = async () => {
+    if (!currentUserId || !investmentData.isConnected || !investmentData.enabled) return;
+    
+    try {
+      const result = await processInvestment(currentUserId, totalOpc);
+      if (result) {
+        setInvestmentData(prev => ({
+          ...prev,
+          balance: result.newBalance,
+          lastInvestmentAmount: result.amount,
+          lastInvestmentDate: result.date,
+          nextScheduledDate: result.nextScheduledDate
+        }));
+      }
+    } catch (error) {
+      console.error("Error processing investment:", error);
+    }
   };
 
   // Check for milestones and trigger celebrations
