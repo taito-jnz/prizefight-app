@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Header from "./components/Header";
 import OpcOverview from "./components/OpcOverview";
 import SkippedSpendLogger from "./components/SkippedSpendLogger";
@@ -8,6 +8,7 @@ import InvestmentSimulator from "./components/InvestmentSimulator";
 import RecentActivity from "./components/RecentActivity";
 import LoginForm from "./components/Auth/LoginForm";
 import UserMenu from "./components/Auth/UserMenu";
+import Confetti from 'react-confetti';
 import { getStoredData, updateActivity } from "./services/localStorage";
 import { 
   saveOpcToFirestore, 
