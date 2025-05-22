@@ -40,6 +40,17 @@ function App() {
   const [isOffline, setIsOffline] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  
+  // Gamification states
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [prevOpcTotal, setPrevOpcTotal] = useState(0);
+  const [prevStreak, setPrevStreak] = useState(0);
+  
+  // Window dimensions for confetti
+  const windowSize = useRef({
+    width: typeof window !== 'undefined' ? window.innerWidth : 0,
+    height: typeof window !== 'undefined' ? window.innerHeight : 0
+  });
 
   // Check authentication state on app load
   useEffect(() => {
@@ -89,7 +100,12 @@ function App() {
       if (userData) {
         // We successfully got data from Firestore
         console.log("Setting app state with Firestore data");
-        setTotalOpc(userData.totalOpc || 0);
+        const currentOpcTotal = userData.totalOpc || 0;
+        
+        // Store previous values for achievement comparison
+        setPrevOpcTotal(currentOpcTotal);
+        
+        setTotalOpc(currentOpcTotal);
         
         // Check if we need to update the streak based on lastLogged date
         let streak = userData.currentStreak || 0;
@@ -99,6 +115,9 @@ function App() {
             const updatedStreak = await checkAndUpdateStreak(uid, streak);
             console.log("Streak checked and updated:", updatedStreak);
             streak = updatedStreak;
+            
+            // Store previous streak for achievement comparison
+            setPrevStreak(streak);
           } catch (error) {
             console.error("Error checking streak:", error);
           }
@@ -183,6 +202,39 @@ function App() {
     loadLocalData();
   };
 
+  // Check for milestones and trigger celebrations
+  const checkForMilestones = (newOpcTotal: number, newStreak: number) => {
+    // Milestone thresholds for OPC totals
+    const opcMilestones = [100, 500, 1000];
+    // Milestone thresholds for streaks
+    const streakMilestones = [3, 7, 14];
+    
+    // Check if any OPC milestone was crossed
+    const crossedOpcMilestone = opcMilestones.some(milestone => 
+      prevOpcTotal < milestone && newOpcTotal >= milestone
+    );
+    
+    // Check if any streak milestone was crossed
+    const crossedStreakMilestone = streakMilestones.some(milestone => 
+      prevStreak < milestone && newStreak >= milestone
+    );
+    
+    // If any milestone was crossed, show confetti
+    if (crossedOpcMilestone || crossedStreakMilestone) {
+      setShowConfetti(true);
+      console.log("Milestone reached! Celebrating with confetti!");
+      
+      // Hide confetti after 5 seconds
+      setTimeout(() => {
+        setShowConfetti(false);
+      }, 5000);
+    }
+    
+    // Update previous values for next check
+    setPrevOpcTotal(newOpcTotal);
+    setPrevStreak(newStreak);
+  };
+
   const handleAddOpc = async (amount: number, description: string) => {
     const newTotal = totalOpc + amount;
     setTotalOpc(newTotal);
@@ -199,6 +251,9 @@ function App() {
 
     const updatedActivities = [newActivity, ...activityItems].slice(0, 10);
     setActivityItems(updatedActivities);
+    
+    // Check for milestones with the new OPC total
+    checkForMilestones(newTotal, currentStreak);
     
     // Always update localStorage as backup
     updateActivity(newTotal, currentStreak, savedBudget, updatedActivities);
@@ -242,6 +297,9 @@ function App() {
     }
     
     setCurrentStreak(newStreak);
+    
+    // Check for streak milestones
+    checkForMilestones(totalOpc, newStreak);
     
     // Always update localStorage
     updateActivity(totalOpc, newStreak, savedBudget, activityItems);
@@ -287,6 +345,18 @@ function App() {
 
   return (
     <div className="container">
+      {/* Confetti celebration for achievements */}
+      {showConfetti && (
+        <Confetti
+          width={windowSize.current.width}
+          height={windowSize.current.height}
+          recycle={false}
+          numberOfPieces={300}
+          gravity={0.2}
+          colors={['#FFC107', '#4CAF50', '#2196F3', '#F44336', '#9C27B0']}
+        />
+      )}
+      
       <Header />
       <UserMenu onLogout={handleLogout} />
       {isOffline && (
@@ -294,7 +364,7 @@ function App() {
           <p>You're currently offline. Your data will be saved locally and synced when you reconnect.</p>
         </div>
       )}
-      <OpcOverview totalOpc={totalOpc} />
+      <OpcOverview totalOpc={totalOpc} currentStreak={currentStreak} />
       <SkippedSpendLogger onAddOpc={handleAddOpc} />
       <BudgetTracker 
         onAddOpc={handleAddOpc} 

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 
 interface OpcOverviewProps {
   totalOpc: number;
+  currentStreak?: number;
 }
 
 // Function to determine the tier based on OPC and streak
@@ -19,7 +20,7 @@ const determineTier = (opcCount: number, streak: number = 0): { label: string; i
   }
 };
 
-const OpcOverview = ({ totalOpc }: OpcOverviewProps) => {
+const OpcOverview = ({ totalOpc, currentStreak = 0 }: OpcOverviewProps) => {
   // Convert OPCs to dollar value (100 OPCs = $25)
   const dollarValue = (totalOpc / 100) * 25;
   
@@ -27,8 +28,8 @@ const OpcOverview = ({ totalOpc }: OpcOverviewProps) => {
   const [prevOpc, setPrevOpc] = useState(totalOpc);
   const [isAnimating, setIsAnimating] = useState(false);
   
-  // Current tier based on OPC count
-  const tier = determineTier(totalOpc);
+  // Current tier based on OPC count and streak
+  const tier = determineTier(totalOpc, currentStreak);
   
   // Reference to the OPC amount element
   const opcAmountRef = useRef<HTMLSpanElement>(null);
