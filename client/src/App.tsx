@@ -489,31 +489,151 @@ function App() {
       />
       <StreakTracker currentStreak={currentStreak} />
       
-      {/* Investment Features */}
-      <BankConnection 
-        onConnect={handleConnectBank}
-        isConnected={investmentData.isConnected}
-        bankName={investmentData.bankName}
-      />
-      
-      <RecurringInvestmentSettings
-        totalOpc={totalOpc}
-        isConnected={investmentData.isConnected}
-        onUpdateSettings={handleUpdateInvestmentSettings}
-        investmentSettings={{
-          frequency: investmentData.frequency,
-          enabled: investmentData.enabled,
-          nextScheduledDate: investmentData.nextScheduledDate,
-          lastInvestmentAmount: investmentData.lastInvestmentAmount,
-          lastInvestmentDate: investmentData.lastInvestmentDate
-        }}
-      />
-      
-      <RealWorldInvestment
-        isConnected={investmentData.isConnected}
-        totalOpc={totalOpc}
-        investmentData={investmentData}
-      />
+      <div className="investment-section">
+        <h2 className="section-title">Real-World Investment Connection</h2>
+        
+        {/* Bank Connection Component */}
+        <div className="card bank-connection-card">
+          <h3 className="card-title">🏦 Connect Your Bank</h3>
+          {investmentData.isConnected ? (
+            <div className="connected-status">
+              <div className="status-indicator success"></div>
+              <p>Connected to <strong>{investmentData.bankName}</strong></p>
+              <button 
+                className="btn btn-outline" 
+                onClick={() => handleConnectBank(investmentData.bankName || 'Chase', 'acct_' + Math.random().toString(36).substring(2, 10))}
+              >
+                Change Bank
+              </button>
+            </div>
+          ) : (
+            <div className="connection-prompt">
+              <p>Connect your bank to automate investments based on your OPC balance</p>
+              <button 
+                className="btn btn-primary connect-bank-btn" 
+                onClick={() => handleConnectBank('Chase', 'acct_' + Math.random().toString(36).substring(2, 10))}
+              >
+                Connect Bank Account
+              </button>
+            </div>
+          )}
+        </div>
+        
+        {/* Recurring Investment Settings */}
+        <div className="card recurring-investment-card">
+          <h3 className="card-title">🔄 Recurring Investments</h3>
+          
+          {investmentData.isConnected ? (
+            <div className="investment-settings">
+              <div className="settings-form">
+                <div className="form-group">
+                  <label htmlFor="frequency">Investment Frequency</label>
+                  <select 
+                    id="frequency"
+                    value={investmentData.frequency}
+                    onChange={(e) => handleUpdateInvestmentSettings(e.target.value, investmentData.enabled)}
+                    className="select-input"
+                    disabled={!investmentData.isConnected}
+                  >
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                </div>
+                
+                <div className="form-group toggle-group">
+                  <label>Auto-invest when OPCs convert to funds</label>
+                  <div 
+                    className={`toggle-switch ${investmentData.enabled ? 'active' : ''}`}
+                    onClick={() => handleUpdateInvestmentSettings(investmentData.frequency, !investmentData.enabled)}
+                  >
+                    <div className="toggle-handle"></div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="investment-info">
+                <div className="info-item">
+                  <span className="info-label">Next Investment:</span>
+                  <span className="info-value highlight">
+                    {investmentData.enabled 
+                      ? `$${Math.floor(totalOpc / 100) * 25} on ${investmentData.nextScheduledDate ? new Date(investmentData.nextScheduledDate).toLocaleDateString() : 'Not scheduled'}` 
+                      : 'Auto-invest disabled'}
+                  </span>
+                </div>
+                
+                {investmentData.lastInvestmentAmount && (
+                  <div className="info-item">
+                    <span className="info-label">Last Investment:</span>
+                    <span className="info-value">
+                      ${investmentData.lastInvestmentAmount.toFixed(2)} on {investmentData.lastInvestmentDate ? new Date(investmentData.lastInvestmentDate).toLocaleDateString() : 'Never'}
+                    </span>
+                  </div>
+                )}
+                
+                <div className="opc-conversion info-item">
+                  <span className="info-label">OPC Conversion Rate:</span>
+                  <span className="info-value">100 OPCs = $25 invested</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="connect-prompt">
+              <p>Connect a bank account to set up recurring investments</p>
+            </div>
+          )}
+        </div>
+        
+        {/* Real World Investment Status */}
+        <div className="card real-world-investment-card">
+          <h3 className="card-title">💸 Real-World Investment Status</h3>
+          
+          {investmentData.isConnected ? (
+            <div className="investment-status">
+              <div className="balance-section">
+                <div className="balance-amount">
+                  <h4>Current Balance</h4>
+                  <span className="amount">${investmentData.balance.toFixed(2)}</span>
+                </div>
+                
+                <div className="investment-metrics">
+                  <div className="metric">
+                    <span className="metric-value">{Math.floor(totalOpc / 100)}</span>
+                    <span className="metric-label">investments made</span>
+                  </div>
+                  <div className="metric">
+                    <span className="metric-value">{totalOpc % 100}</span>
+                    <span className="metric-label">OPCs until next</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="insight-box">
+                <p>
+                  Your skipped spending has turned into real investments! Keep saving to watch your money grow.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="connect-prompt">
+              <p>Connect your bank account to start tracking real-world investments</p>
+              <div className="benefits-list">
+                <div className="benefit-item">
+                  <span className="icon">✓</span>
+                  <span>Automatically invest when you reach 100 OPCs</span>
+                </div>
+                <div className="benefit-item">
+                  <span className="icon">✓</span>
+                  <span>Track your real investment balance</span>
+                </div>
+                <div className="benefit-item">
+                  <span className="icon">✓</span>
+                  <span>See the power of compound growth over time</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
       
       <InvestmentSimulator totalOpc={totalOpc} />
       <RecentActivity activityItems={activityItems} />

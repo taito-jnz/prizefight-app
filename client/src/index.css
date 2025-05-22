@@ -26,6 +26,7 @@ body {
   padding: 1rem;
   width: 100%;
   box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 a {
@@ -488,11 +489,16 @@ input, select {
 }
 
 /* Bank Connection Styles */
-.bank-connection-widget .connected-status {
+.bank-connection-card {
+  border: 2px solid rgba(59, 130, 246, 0.2);
+}
+
+.connected-status {
   display: flex;
   align-items: center;
   gap: 1rem;
   margin-top: 1rem;
+  flex-wrap: wrap;
 }
 
 .status-indicator {
@@ -512,6 +518,10 @@ input, select {
   gap: 1rem;
   text-align: center;
   padding: 1rem 0;
+}
+
+.connect-bank-btn {
+  max-width: 300px;
 }
 
 /* Modal Styles */
@@ -627,7 +637,25 @@ input, select {
   animation: spin 1s linear infinite;
 }
 
+/* Investment Section */
+.investment-section {
+  margin-top: 2rem;
+  border-top: 2px solid #f0f4ff;
+  padding-top: 1rem;
+}
+
+.section-title {
+  text-align: center;
+  color: #4361ee;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
 /* Recurring Investment Settings */
+.recurring-investment-card {
+  border: 2px solid rgba(16, 185, 129, 0.2);
+}
+
 .recurring-investment-card .investment-settings {
   display: flex;
   flex-direction: column;
