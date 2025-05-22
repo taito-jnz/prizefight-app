@@ -6,7 +6,12 @@ import BudgetTracker from "./components/BudgetTracker";
 import StreakTracker from "./components/StreakTracker";
 import InvestmentSimulator from "./components/InvestmentSimulator";
 import RecentActivity from "./components/RecentActivity";
-import { getStoredData, updateActivity } from "./services/localStorage";
+import { 
+  getUserData, 
+  updateUserStats, 
+  addActivity, 
+  getActivityItems 
+} from "./services/firebaseService";
 
 type ActivityItem = {
   id: string;
@@ -20,35 +25,54 @@ function App() {
   const [currentStreak, setCurrentStreak] = useState(0);
   const [savedBudget, setSavedBudget] = useState(45);
   const [activityItems, setActivityItems] = useState<ActivityItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Load data from localStorage
-    const storedData = getStoredData();
-    setTotalOpc(storedData.totalOpc);
-    setCurrentStreak(storedData.currentStreak);
-    setSavedBudget(storedData.savedBudget || 45);
-    setActivityItems(storedData.activityItems);
+    // Load data from Firestore
+    const loadData = async () => {
+      try {
+        // Get user data
+        const userData = await getUserData();
+        setTotalOpc(userData.totalOpc);
+        setCurrentStreak(userData.currentStreak);
+        setSavedBudget(userData.savedBudget || 45);
+        
+        // Get activity items
+        const activities = await getActivityItems();
+        setActivityItems(activities);
+      } catch (error) {
+        console.error("Error loading data from Firestore:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadData();
   }, []);
 
-  const handleAddOpc = (amount: number, description: string) => {
+  const handleAddOpc = async (amount: number, description: string) => {
     const newTotal = totalOpc + amount;
     setTotalOpc(newTotal);
     
     const newActivity = {
-      id: Date.now().toString(),
       description,
       date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
       opcEarned: amount
     };
 
-    const updatedActivities = [newActivity, ...activityItems].slice(0, 10);
-    setActivityItems(updatedActivities);
+    // Add to Firestore
+    const addedActivity = await addActivity(newActivity);
     
-    // Update localStorage
-    updateActivity(newTotal, currentStreak, savedBudget, updatedActivities);
+    if (addedActivity) {
+      const updatedActivities = [addedActivity, ...activityItems].slice(0, 10);
+      setActivityItems(updatedActivities);
+      
+      // Update user stats in Firestore
+      await updateUserStats(newTotal, currentStreak, savedBudget);
+    }
   };
 
-  const handleUpdateStreak = (isUnderBudget: boolean) => {
+  const handleUpdateStreak = async (isUnderBudget: boolean) => {
     let newStreak;
     
     if (isUnderBudget) {
@@ -58,13 +82,27 @@ function App() {
     }
     
     setCurrentStreak(newStreak);
-    updateActivity(totalOpc, newStreak, savedBudget, activityItems);
+    
+    // Update user stats in Firestore
+    await updateUserStats(totalOpc, newStreak, savedBudget);
   };
 
-  const handleUpdateBudget = (newBudget: number) => {
+  const handleUpdateBudget = async (newBudget: number) => {
     setSavedBudget(newBudget);
-    updateActivity(totalOpc, currentStreak, newBudget, activityItems);
+    
+    // Update user stats in Firestore
+    await updateUserStats(totalOpc, currentStreak, newBudget);
   };
+
+  if (isLoading) {
+    return (
+      <div className="container">
+        <div className="loading-spinner">
+          <p>Loading your data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container">
