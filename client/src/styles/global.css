@@ -358,6 +358,28 @@ input::-webkit-inner-spin-button {
   font-size: 1rem;
 }
 
+/* Offline warning */
+.offline-warning {
+  background-color: #fef2f2; /* red-50 */
+  border-left: 4px solid #ef4444; /* red-500 */
+  color: #b91c1c; /* red-700 */
+  font-size: 0.875rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: 0.5rem;
+}
+
+/* Loading spinner */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 10rem;
+  text-align: center;
+  font-size: 1.125rem;
+  color: #6b7280; /* gray-500 */
+}
+
 /* Footer */
 .footer {
   text-align: center;
