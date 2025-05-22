@@ -488,154 +488,209 @@ function App() {
         onUpdateBudget={handleUpdateBudget}
       />
       <StreakTracker currentStreak={currentStreak} />
+      <InvestmentSimulator totalOpc={totalOpc} />
       
-      <div className="investment-section">
-        <h2 className="section-title">Real-World Investment Connection</h2>
+      {/* Simple Banking Connection Section - Direct HTML */}
+      <div className="card" style={{border: '2px solid #e6effd', marginBottom: '1.5rem'}}>
+        <h2 style={{fontSize: '1.25rem', marginTop: 0, marginBottom: '1rem'}}>
+          🏦 Connect Your Bank Account
+        </h2>
         
-        {/* Bank Connection Component */}
-        <div className="card bank-connection-card">
-          <h3 className="card-title">🏦 Connect Your Bank</h3>
-          {investmentData.isConnected ? (
-            <div className="connected-status">
-              <div className="status-indicator success"></div>
-              <p>Connected to <strong>{investmentData.bankName}</strong></p>
-              <button 
-                className="btn btn-outline" 
-                onClick={() => handleConnectBank(investmentData.bankName || 'Chase', 'acct_' + Math.random().toString(36).substring(2, 10))}
+        {investmentData.isConnected ? (
+          <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap'}}>
+            <div style={{
+              width: '12px', 
+              height: '12px', 
+              borderRadius: '50%', 
+              backgroundColor: '#4caf50',
+              display: 'inline-block'
+            }}></div>
+            <p style={{margin: '0.5rem 0'}}>
+              Connected to <strong>{investmentData.bankName || 'Chase'}</strong>
+            </p>
+            <button 
+              onClick={() => handleConnectBank('Chase', 'acct_' + Math.random().toString(36).substring(2, 10))}
+              style={{
+                backgroundColor: 'transparent',
+                border: '1px solid #4361ee',
+                color: '#4361ee',
+                padding: '0.5rem 1rem',
+                borderRadius: '0.5rem',
+                cursor: 'pointer',
+                marginLeft: 'auto'
+              }}
+            >
+              Change Bank
+            </button>
+          </div>
+        ) : (
+          <div style={{textAlign: 'center', margin: '1rem 0'}}>
+            <p style={{marginBottom: '1rem'}}>
+              Connect your bank to automate investments based on your OPC balance
+            </p>
+            <button 
+              onClick={() => handleConnectBank('Chase', 'acct_' + Math.random().toString(36).substring(2, 10))}
+              style={{
+                backgroundColor: '#4361ee',
+                border: 'none',
+                color: 'white',
+                padding: '0.75rem 1.5rem',
+                borderRadius: '0.5rem',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                maxWidth: '300px',
+                margin: '0 auto',
+                display: 'block'
+              }}
+            >
+              Connect Bank Account
+            </button>
+          </div>
+        )}
+
+        {investmentData.isConnected && (
+          <div style={{marginTop: '1.5rem', borderTop: '1px solid #eee', paddingTop: '1rem'}}>
+            <div style={{marginBottom: '1rem'}}>
+              <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: '500'}}>
+                Investment Frequency
+              </label>
+              <select 
+                value={investmentData.frequency}
+                onChange={(e) => handleUpdateInvestmentSettings(e.target.value, investmentData.enabled)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  borderRadius: '0.5rem',
+                  border: '1px solid #ddd'
+                }}
               >
-                Change Bank
-              </button>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
             </div>
-          ) : (
-            <div className="connection-prompt">
-              <p>Connect your bank to automate investments based on your OPC balance</p>
-              <button 
-                className="btn btn-primary connect-bank-btn" 
-                onClick={() => handleConnectBank('Chase', 'acct_' + Math.random().toString(36).substring(2, 10))}
+            
+            <div style={{
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              marginBottom: '1rem'
+            }}>
+              <span>Auto-invest when OPCs convert to funds</span>
+              <div 
+                onClick={() => handleUpdateInvestmentSettings(investmentData.frequency, !investmentData.enabled)}
+                style={{
+                  width: '50px',
+                  height: '24px',
+                  backgroundColor: investmentData.enabled ? '#4caf50' : '#ccc',
+                  borderRadius: '12px',
+                  position: 'relative',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.3s'
+                }}
               >
-                Connect Bank Account
-              </button>
+                <div style={{
+                  width: '20px',
+                  height: '20px',
+                  backgroundColor: 'white',
+                  borderRadius: '50%',
+                  position: 'absolute',
+                  top: '2px',
+                  left: investmentData.enabled ? '28px' : '2px',
+                  transition: 'left 0.3s'
+                }}></div>
+              </div>
             </div>
-          )}
-        </div>
-        
-        {/* Recurring Investment Settings */}
-        <div className="card recurring-investment-card">
-          <h3 className="card-title">🔄 Recurring Investments</h3>
-          
-          {investmentData.isConnected ? (
-            <div className="investment-settings">
-              <div className="settings-form">
-                <div className="form-group">
-                  <label htmlFor="frequency">Investment Frequency</label>
-                  <select 
-                    id="frequency"
-                    value={investmentData.frequency}
-                    onChange={(e) => handleUpdateInvestmentSettings(e.target.value, investmentData.enabled)}
-                    className="select-input"
-                    disabled={!investmentData.isConnected}
-                  >
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                  </select>
-                </div>
-                
-                <div className="form-group toggle-group">
-                  <label>Auto-invest when OPCs convert to funds</label>
-                  <div 
-                    className={`toggle-switch ${investmentData.enabled ? 'active' : ''}`}
-                    onClick={() => handleUpdateInvestmentSettings(investmentData.frequency, !investmentData.enabled)}
-                  >
-                    <div className="toggle-handle"></div>
-                  </div>
-                </div>
+            
+            <div style={{
+              backgroundColor: '#f9f9f9',
+              padding: '1rem',
+              borderRadius: '0.5rem',
+              fontSize: '0.9rem'
+            }}>
+              <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem'}}>
+                <span style={{color: '#666'}}>Next Investment:</span>
+                <span style={{fontWeight: '600', color: '#4361ee'}}>
+                  {investmentData.enabled 
+                    ? `$${Math.floor(totalOpc / 100) * 25} on ${investmentData.nextScheduledDate ? new Date(investmentData.nextScheduledDate).toLocaleDateString() : 'Not scheduled'}` 
+                    : 'Auto-invest disabled'}
+                </span>
               </div>
               
-              <div className="investment-info">
-                <div className="info-item">
-                  <span className="info-label">Next Investment:</span>
-                  <span className="info-value highlight">
-                    {investmentData.enabled 
-                      ? `$${Math.floor(totalOpc / 100) * 25} on ${investmentData.nextScheduledDate ? new Date(investmentData.nextScheduledDate).toLocaleDateString() : 'Not scheduled'}` 
-                      : 'Auto-invest disabled'}
+              {investmentData.lastInvestmentAmount && (
+                <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem'}}>
+                  <span style={{color: '#666'}}>Last Investment:</span>
+                  <span>
+                    ${investmentData.lastInvestmentAmount.toFixed(2)} on {investmentData.lastInvestmentDate ? new Date(investmentData.lastInvestmentDate).toLocaleDateString() : 'Never'}
                   </span>
                 </div>
-                
-                {investmentData.lastInvestmentAmount && (
-                  <div className="info-item">
-                    <span className="info-label">Last Investment:</span>
-                    <span className="info-value">
-                      ${investmentData.lastInvestmentAmount.toFixed(2)} on {investmentData.lastInvestmentDate ? new Date(investmentData.lastInvestmentDate).toLocaleDateString() : 'Never'}
-                    </span>
-                  </div>
-                )}
-                
-                <div className="opc-conversion info-item">
-                  <span className="info-label">OPC Conversion Rate:</span>
-                  <span className="info-value">100 OPCs = $25 invested</span>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="connect-prompt">
-              <p>Connect a bank account to set up recurring investments</p>
-            </div>
-          )}
-        </div>
-        
-        {/* Real World Investment Status */}
-        <div className="card real-world-investment-card">
-          <h3 className="card-title">💸 Real-World Investment Status</h3>
-          
-          {investmentData.isConnected ? (
-            <div className="investment-status">
-              <div className="balance-section">
-                <div className="balance-amount">
-                  <h4>Current Balance</h4>
-                  <span className="amount">${investmentData.balance.toFixed(2)}</span>
-                </div>
-                
-                <div className="investment-metrics">
-                  <div className="metric">
-                    <span className="metric-value">{Math.floor(totalOpc / 100)}</span>
-                    <span className="metric-label">investments made</span>
-                  </div>
-                  <div className="metric">
-                    <span className="metric-value">{totalOpc % 100}</span>
-                    <span className="metric-label">OPCs until next</span>
-                  </div>
-                </div>
-              </div>
+              )}
               
-              <div className="insight-box">
-                <p>
-                  Your skipped spending has turned into real investments! Keep saving to watch your money grow.
-                </p>
+              <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                <span style={{color: '#666'}}>OPC Conversion Rate:</span>
+                <span>100 OPCs = $25 invested</span>
               </div>
             </div>
-          ) : (
-            <div className="connect-prompt">
-              <p>Connect your bank account to start tracking real-world investments</p>
-              <div className="benefits-list">
-                <div className="benefit-item">
-                  <span className="icon">✓</span>
-                  <span>Automatically invest when you reach 100 OPCs</span>
-                </div>
-                <div className="benefit-item">
-                  <span className="icon">✓</span>
-                  <span>Track your real investment balance</span>
-                </div>
-                <div className="benefit-item">
-                  <span className="icon">✓</span>
-                  <span>See the power of compound growth over time</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
       
-      <InvestmentSimulator totalOpc={totalOpc} />
+      {/* Investment Balance Card */}
+      {investmentData.isConnected && (
+        <div className="card" style={{border: '2px solid #e6f7f0', marginBottom: '1.5rem'}}>
+          <h2 style={{fontSize: '1.25rem', marginTop: 0, marginBottom: '1rem'}}>
+            💹 Real-World Investment Balance
+          </h2>
+          
+          <div style={{textAlign: 'center', marginBottom: '1.5rem'}}>
+            <div style={{marginBottom: '1rem'}}>
+              <h3 style={{margin: '0 0 0.5rem 0', fontSize: '1rem', color: '#666'}}>
+                Current Balance
+              </h3>
+              <div style={{fontSize: '2rem', fontWeight: 'bold', color: '#4caf50'}}>
+                ${investmentData.balance.toFixed(2)}
+              </div>
+            </div>
+            
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-around',
+              maxWidth: '300px',
+              margin: '0 auto'
+            }}>
+              <div style={{textAlign: 'center'}}>
+                <div style={{fontSize: '1.25rem', fontWeight: 'bold'}}>
+                  {Math.floor(totalOpc / 100)}
+                </div>
+                <div style={{fontSize: '0.75rem', color: '#666'}}>
+                  investments made
+                </div>
+              </div>
+              <div style={{textAlign: 'center'}}>
+                <div style={{fontSize: '1.25rem', fontWeight: 'bold'}}>
+                  {totalOpc % 100}
+                </div>
+                <div style={{fontSize: '0.75rem', color: '#666'}}>
+                  OPCs until next
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div style={{
+            backgroundColor: '#f0f9f6',
+            padding: '1rem',
+            borderRadius: '0.5rem',
+            textAlign: 'center',
+            fontSize: '0.9rem',
+            color: '#10b981'
+          }}>
+            <p style={{margin: 0}}>
+              Your skipped spending has turned into real investments! Keep saving to watch your money grow.
+            </p>
+          </div>
+        </div>
+      )}
+      
       <RecentActivity activityItems={activityItems} />
       <footer className="footer">
         <p>Prizefight - Smart spending simulator</p>
