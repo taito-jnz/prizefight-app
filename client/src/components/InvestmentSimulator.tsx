@@ -12,8 +12,14 @@ const InvestmentSimulator = ({ totalOpc }: InvestmentSimulatorProps) => {
   const timeYears = 5; // 5-year projection
   const futureValue = investmentValue * Math.pow(1 + rate, timeYears);
 
+  // Calculate how many full $25 investments can be made
+  const fullInvestments = Math.floor(totalOpc / 100);
+  
+  // Calculate OPCs needed for next investment
+  const opcNeededForNext = fullInvestments > 0 ? 100 - (totalOpc % 100) : 100;
+
   return (
-    <div className="card">
+    <div className="card investment-card">
       <h2 className="card-title">📈 Investment Simulator</h2>
       <div className="simulator-stats">
         <div className="stat-row">
@@ -25,12 +31,8 @@ const InvestmentSimulator = ({ totalOpc }: InvestmentSimulatorProps) => {
           <span className="stat-value">${investmentValue.toFixed(2)}</span>
         </div>
         <div className="stat-row">
-          <span className="stat-label">Annual Return Rate</span>
-          <span className="stat-value success">6% APY</span>
-        </div>
-        <div className="stat-row">
-          <span className="stat-label">Time Horizon</span>
-          <span className="stat-value">5 years</span>
+          <span className="stat-label">Next Investment In</span>
+          <span className="stat-value">{opcNeededForNext} more OPCs</span>
         </div>
       </div>
 
@@ -39,9 +41,19 @@ const InvestmentSimulator = ({ totalOpc }: InvestmentSimulatorProps) => {
         <div className="projection-value">
           <span>${futureValue.toFixed(2)}</span>
         </div>
+        <div className="projection-details">
+          <div className="detail-item">
+            <span className="detail-label">Annual Return Rate:</span>
+            <span className="detail-value success">6% APY</span>
+          </div>
+          <div className="detail-item">
+            <span className="detail-label">Time Horizon:</span>
+            <span className="detail-value">5 years</span>
+          </div>
+        </div>
         <p className="projection-info">
-          This is how much your simulated investments could be worth in 5 years, 
-          assuming a 6% annual return compounded yearly.
+          This is what your saved money could be worth if invested for 5 years
+          at a 6% annual return, compounded yearly.
         </p>
       </div>
     </div>

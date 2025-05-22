@@ -23,6 +23,11 @@
 --destructive-foreground: 60 9.1% 97.8%;
 --ring: 20 14.3% 4.1%;
 --radius: 0.5rem;
+
+--success: 142 69% 58%;
+--success-foreground: 210 20% 98%;
+--warning: 38 92% 50%;
+--warning-foreground: 210 20% 98%;
   }
   .dark {
       --background: 240 10% 3.9%;
@@ -45,6 +50,11 @@
 --destructive-foreground: 0 0% 98%;
 --ring: 240 4.9% 83.9%;
 --radius: 0.5rem;
+
+--success: 142 69% 58%;
+--success-foreground: 210 20% 98%;
+--warning: 38 92% 50%;
+--warning-foreground: 210 20% 98%;
   }
 
 @layer base {
@@ -55,4 +65,90 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+}
+
+/* Custom styles for investment simulator */
+.investment-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+.projection-box {
+  background-color: #f5f8ff;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.projection-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.projection-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #0056b3;
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.projection-details {
+  display: flex;
+  justify-content: space-between;
+  margin: 1rem 0;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.detail-label {
+  font-weight: 500;
+}
+
+.detail-value {
+  font-weight: 600;
+}
+
+.detail-value.success {
+  color: hsl(var(--success));
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.stat-label {
+  font-weight: 500;
+  color: #666;
+}
+
+.stat-value {
+  font-weight: 700;
+}
+
+.stat-value.highlight {
+  color: #0056b3;
+  font-size: 1.25rem;
+}
+
+.stat-value.success {
+  color: hsl(var(--success));
+}
+
+.projection-info {
+  font-size: 0.875rem;
+  color: #666;
+  margin-top: 0.5rem;
+  line-height: 1.4;
 }
