@@ -393,6 +393,12 @@ function App() {
         },
         false
       );
+      
+      // Check if we need to process an investment
+      // Only do this if the user has connected a bank and enabled auto-invest
+      if (investmentData.isConnected && investmentData.enabled) {
+        await processInvestmentIfNeeded();
+      }
     }
   };
 
@@ -482,6 +488,33 @@ function App() {
         onUpdateBudget={handleUpdateBudget}
       />
       <StreakTracker currentStreak={currentStreak} />
+      
+      {/* Investment Features */}
+      <BankConnection 
+        onConnect={handleConnectBank}
+        isConnected={investmentData.isConnected}
+        bankName={investmentData.bankName}
+      />
+      
+      <RecurringInvestmentSettings
+        totalOpc={totalOpc}
+        isConnected={investmentData.isConnected}
+        onUpdateSettings={handleUpdateInvestmentSettings}
+        investmentSettings={{
+          frequency: investmentData.frequency,
+          enabled: investmentData.enabled,
+          nextScheduledDate: investmentData.nextScheduledDate,
+          lastInvestmentAmount: investmentData.lastInvestmentAmount,
+          lastInvestmentDate: investmentData.lastInvestmentDate
+        }}
+      />
+      
+      <RealWorldInvestment
+        isConnected={investmentData.isConnected}
+        totalOpc={totalOpc}
+        investmentData={investmentData}
+      />
+      
       <InvestmentSimulator totalOpc={totalOpc} />
       <RecentActivity activityItems={activityItems} />
       <footer className="footer">
