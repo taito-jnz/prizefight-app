@@ -1,26 +1,44 @@
 import { useState } from 'react';
+import { saveOpcToFirestore, safeFirestoreOperation } from "../services/firestoreHelpers";
 
 interface SkippedSpendLoggerProps {
   onAddOpc: (amount: number, description: string) => void;
 }
 
+const DEFAULT_USER_ID = "default-user";
+
 const SkippedSpendLogger = ({ onAddOpc }: SkippedSpendLoggerProps) => {
   const [skippedAmount, setSkippedAmount] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const opcPreview = skippedAmount ? Math.floor(parseFloat(skippedAmount) / 0.5) : 0;
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSkippedAmount(e.target.value);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isSubmitting) return;
     
     const amount = parseFloat(skippedAmount);
     
     if (amount >= 0.5) {
-      const opcEarned = Math.floor(amount / 0.5);
-      onAddOpc(opcEarned, `Skipped purchase ($${amount.toFixed(2)})`);
-      setSkippedAmount('');
+      try {
+        setIsSubmitting(true);
+        const opcEarned = Math.floor(amount / 0.5);
+        
+        // Call the parent callback to update local state
+        onAddOpc(opcEarned, `Skipped purchase ($${amount.toFixed(2)})`);
+        
+        // Clear the input field immediately for better user experience
+        setSkippedAmount('');
+        
+      } catch (error) {
+        console.error("Error logging skipped spend:", error);
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -49,8 +67,12 @@ const SkippedSpendLogger = ({ onAddOpc }: SkippedSpendLoggerProps) => {
         <div className="preview-box">
           <p>You'll earn <span className="highlight">{opcPreview}</span> 🪙 OPCs</p>
         </div>
-        <button type="submit" className="btn btn-primary" disabled={!skippedAmount || parseFloat(skippedAmount) < 0.5}>
-          Log Skipped Spend
+        <button 
+          type="submit" 
+          className="btn btn-primary" 
+          disabled={isSubmitting || !skippedAmount || parseFloat(skippedAmount) < 0.5}
+        >
+          {isSubmitting ? 'Saving...' : 'Log Skipped Spend'}
         </button>
       </form>
     </div>

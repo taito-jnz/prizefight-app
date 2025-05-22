@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { saveOpcToFirestore, safeFirestoreOperation } from "../services/firestoreHelpers";
 
 interface BudgetTrackerProps {
   onAddOpc: (amount: number, description: string) => void;
@@ -6,6 +7,8 @@ interface BudgetTrackerProps {
   savedBudget: number;
   onUpdateBudget: (budget: number) => void;
 }
+
+const DEFAULT_USER_ID = "default-user";
 
 const BudgetTracker = ({ 
   onAddOpc, 
@@ -15,6 +18,7 @@ const BudgetTracker = ({
 }: BudgetTrackerProps) => {
   const [budget, setBudget] = useState(savedBudget.toString());
   const [actualSpend, setActualSpend] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const budgetValue = parseFloat(budget);
   const spendValue = actualSpend ? parseFloat(actualSpend) : 0;
@@ -33,19 +37,30 @@ const BudgetTracker = ({
     setActualSpend(e.target.value);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (isSubmitting) return;
+    
     if (budgetValue > 0 && actualSpend !== '') {
-      // Update streak
-      onUpdateStreak(isUnderBudget);
-      
-      // If under budget, add OPCs
-      if (isUnderBudget && opcToEarn > 0) {
-        onAddOpc(opcToEarn, `Under budget ($${difference.toFixed(2)})`);
+      try {
+        setIsSubmitting(true);
+        
+        // Update streak
+        onUpdateStreak(isUnderBudget);
+        
+        // If under budget, add OPCs
+        if (isUnderBudget && opcToEarn > 0) {
+          // Call the parent callback to update local state
+          onAddOpc(opcToEarn, `Under budget ($${difference.toFixed(2)})`);
+        }
+        
+        setActualSpend('');
+      } catch (error) {
+        console.error("Error logging budget tracking:", error);
+      } finally {
+        setIsSubmitting(false);
       }
-      
-      setActualSpend('');
     }
   };
 
@@ -109,9 +124,9 @@ const BudgetTracker = ({
         <button 
           type="submit" 
           className="btn btn-primary"
-          disabled={!budget || !actualSpend || budgetValue <= 0}
+          disabled={isSubmitting || !budget || !actualSpend || budgetValue <= 0}
         >
-          Log Today's Spending
+          {isSubmitting ? 'Saving...' : 'Log Today\'s Spending'}
         </button>
       </form>
     </div>
