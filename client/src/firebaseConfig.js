@@ -5,7 +5,7 @@ import { getApps, getApp } from "firebase/app";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyB99R6Muh0fwxk1zAp33gN5t7fFvNxp1_Y", // Using the API key directly
+  apiKey: "AIzaSyCzhM52OKKOhj2GRrYTBuBWBWZimdr5cMs",
   authDomain: "prizefight-98651.firebaseapp.com",
   projectId: "prizefight-98651",
   storageBucket: "prizefight-98651.firebasestorage.app",
