@@ -9,8 +9,16 @@ import RecentActivity from "./components/RecentActivity";
 import LoginForm from "./components/Auth/LoginForm";
 import UserMenu from "./components/Auth/UserMenu";
 import { getStoredData, updateActivity } from "./services/localStorage";
-import { saveOpcToFirestore, getOpcFromFirestore, safeFirestoreOperation } from "./services/firestoreHelpers";
-import { onAuthStateChange, getCurrentUser, getUserData as getFirebaseUserData } from "./services/authService";
+import { 
+  saveOpcToFirestore, 
+  updateStreakInFirestore, 
+  updateBudgetInFirestore,
+  getUserDataFromFirestore, 
+  getActivitiesFromFirestore,
+  saveActivityToFirestore,
+  safeFirestoreOperation 
+} from "./services/firestoreHelpers";
+import { onAuthStateChange, getCurrentUser } from "./services/authService";
 
 type ActivityItem = {
   id: string;
@@ -27,15 +35,18 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isOffline, setIsOffline] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Check authentication state on app load
   useEffect(() => {
     const unsubscribe = onAuthStateChange((user) => {
       if (user) {
         setIsAuthenticated(true);
+        setCurrentUserId(user.uid);
         loadUserData(user.uid);
       } else {
         setIsAuthenticated(false);
+        setCurrentUserId(null);
         // If not authenticated, load from localStorage as fallback
         loadLocalData();
         setIsLoading(false);
@@ -63,7 +74,7 @@ function App() {
       // Get user data from Firestore
       const userData = await safeFirestoreOperation(
         async () => {
-          const data = await getFirebaseUserData(uid);
+          const data = await getUserDataFromFirestore(uid);
           return data || null;
         },
         null
@@ -75,10 +86,22 @@ function App() {
         setCurrentStreak(userData.currentStreak || 0);
         setSavedBudget(userData.savedBudget || 45);
         
-        // TODO: Fetch activity items from Firestore in a future update
-        // For now, still use localStorage for activity items
-        const storedData = getStoredData();
-        setActivityItems(storedData.activityItems);
+        // Try to fetch activity items from Firestore
+        const firestoreActivities = await safeFirestoreOperation(
+          async () => {
+            return await getActivitiesFromFirestore(uid);
+          },
+          []
+        );
+        
+        // If we got activities from Firestore, use them
+        if (firestoreActivities && firestoreActivities.length > 0) {
+          setActivityItems(firestoreActivities);
+        } else {
+          // Otherwise, use localStorage for activity items
+          const storedData = getStoredData();
+          setActivityItems(storedData.activityItems);
+        }
       } else {
         // No user data found in Firestore, use localStorage
         loadLocalData();
@@ -104,12 +127,14 @@ function App() {
     const user = getCurrentUser();
     if (user) {
       setIsAuthenticated(true);
+      setCurrentUserId(user.uid);
       loadUserData(user.uid);
     }
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    setCurrentUserId(null);
     // Reset to default state or load from localStorage
     loadLocalData();
   };
@@ -132,10 +157,16 @@ function App() {
     updateActivity(newTotal, currentStreak, savedBudget, updatedActivities);
     
     // If authenticated and online, save to Firestore
-    const user = getCurrentUser();
-    if (user && !isOffline) {
+    if (currentUserId && !isOffline) {
+      // Save OPC total to Firestore
       await safeFirestoreOperation(
-        () => saveOpcToFirestore(user.uid, newTotal),
+        () => saveOpcToFirestore(currentUserId, newTotal),
+        false
+      );
+      
+      // Save activity to Firestore
+      await safeFirestoreOperation(
+        () => saveActivityToFirestore(currentUserId, newActivity),
         false
       );
     }
@@ -155,7 +186,13 @@ function App() {
     // Always update localStorage
     updateActivity(totalOpc, newStreak, savedBudget, activityItems);
     
-    // TODO: Update streak in Firestore in future update
+    // Update streak in Firestore if authenticated and online
+    if (currentUserId && !isOffline) {
+      await safeFirestoreOperation(
+        () => updateStreakInFirestore(currentUserId, newStreak),
+        false
+      );
+    }
   };
 
   const handleUpdateBudget = async (newBudget: number) => {
@@ -164,7 +201,13 @@ function App() {
     // Always update localStorage
     updateActivity(totalOpc, currentStreak, newBudget, activityItems);
     
-    // TODO: Update budget in Firestore in future update
+    // Update budget in Firestore if authenticated and online
+    if (currentUserId && !isOffline) {
+      await safeFirestoreOperation(
+        () => updateBudgetInFirestore(currentUserId, newBudget),
+        false
+      );
+    }
   };
 
   if (isLoading) {
