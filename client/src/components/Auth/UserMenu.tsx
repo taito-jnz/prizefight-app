@@ -9,8 +9,11 @@ const UserMenu = ({ onLogout }: UserMenuProps) => {
   
   const handleLogout = async () => {
     try {
+      console.log("Logging out user");
       await signOutUser();
+      console.log("Firebase logout successful");
       onLogout();
+      console.log("App state reset completed");
     } catch (error) {
       console.error('Error during logout:', error);
     }
