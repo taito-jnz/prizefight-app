@@ -26,7 +26,7 @@ const SkippedSpendLogger = ({ onAddOpc }: SkippedSpendLoggerProps) => {
 
   return (
     <div className="card">
-      <h2 className="card-title">Log Skipped Purchase</h2>
+      <h2 className="card-title">💸 Log Skipped Purchase</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="skipped-amount" className="form-label">
@@ -47,7 +47,7 @@ const SkippedSpendLogger = ({ onAddOpc }: SkippedSpendLoggerProps) => {
           </div>
         </div>
         <div className="preview-box">
-          <p>You'll earn <span className="highlight">{opcPreview}</span> OPCs</p>
+          <p>You'll earn <span className="highlight">{opcPreview}</span> 🪙 OPCs</p>
         </div>
         <button type="submit" className="btn btn-primary" disabled={!skippedAmount || parseFloat(skippedAmount) < 0.5}>
           Log Skipped Spend

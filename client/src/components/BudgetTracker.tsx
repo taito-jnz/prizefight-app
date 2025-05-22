@@ -51,7 +51,7 @@ const BudgetTracker = ({
 
   return (
     <div className="card">
-      <h2 className="card-title">Daily Budget Tracker</h2>
+      <h2 className="card-title">📊 Daily Budget Tracker</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="daily-budget" className="form-label">
@@ -94,12 +94,12 @@ const BudgetTracker = ({
           <>
             {isUnderBudget ? (
               <div className="preview-box">
-                <p>You're <span className="success">${difference.toFixed(2)}</span> under budget!</p>
-                <p>You'll earn <span className="highlight">{opcToEarn}</span> OPCs</p>
+                <p>✅ You're <span className="success">${difference.toFixed(2)}</span> under budget!</p>
+                <p>You'll earn <span className="highlight">{opcToEarn}</span> 🪙 OPCs</p>
               </div>
             ) : (
               <div className="preview-box">
-                <p>You're <span className="error">${Math.abs(difference).toFixed(2)}</span> over budget</p>
+                <p>⚠️ You're <span className="error">${Math.abs(difference).toFixed(2)}</span> over budget</p>
                 <p>Stay under budget to earn OPCs!</p>
               </div>
             )}

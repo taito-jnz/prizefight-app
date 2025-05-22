@@ -5,7 +5,7 @@ interface StreakTrackerProps {
 const StreakTracker = ({ currentStreak }: StreakTrackerProps) => {
   return (
     <div className="card">
-      <h2 className="card-title">Your Budget Streak</h2>
+      <h2 className="card-title">🔥 Your Budget Streak</h2>
       <div className="streak-display">
         <div className="streak-circle">
           <span className="streak-count">{currentStreak}</span>

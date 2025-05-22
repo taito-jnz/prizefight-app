@@ -9,7 +9,7 @@ const OpcOverview = ({ totalOpc }: OpcOverviewProps) => {
   return (
     <div className="card">
       <div className="card-header">
-        <h2 className="card-title">Your OPC Balance</h2>
+        <h2 className="card-title">🪙 Your OPC Balance</h2>
         <span className="badge">Coins</span>
       </div>
       <div className="opc-display">

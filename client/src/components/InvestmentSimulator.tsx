@@ -14,11 +14,11 @@ const InvestmentSimulator = ({ totalOpc }: InvestmentSimulatorProps) => {
 
   return (
     <div className="card">
-      <h2 className="card-title">Investment Simulator</h2>
+      <h2 className="card-title">📈 Investment Simulator</h2>
       <div className="simulator-stats">
         <div className="stat-row">
           <span className="stat-label">Your OPC Balance</span>
-          <span className="stat-value highlight">{totalOpc} OPCs</span>
+          <span className="stat-value highlight">{totalOpc} 🪙</span>
         </div>
         <div className="stat-row">
           <span className="stat-label">Equivalent Investment</span>
@@ -35,7 +35,7 @@ const InvestmentSimulator = ({ totalOpc }: InvestmentSimulatorProps) => {
       </div>
 
       <div className="projection-box">
-        <h3 className="projection-title">Projected Future Value</h3>
+        <h3 className="projection-title">💰 Projected Future Value</h3>
         <div className="projection-value">
           <span>${futureValue.toFixed(2)}</span>
         </div>
