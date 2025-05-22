@@ -16,8 +16,11 @@ import {
   getUserDataFromFirestore, 
   getActivitiesFromFirestore,
   saveActivityToFirestore,
+  checkAndUpdateStreak,
   safeFirestoreOperation 
 } from "./services/firestoreHelpers";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "./firebaseConfig";
 import { onAuthStateChange, getCurrentUser } from "./services/authService";
 
 type ActivityItem = {
@@ -86,7 +89,21 @@ function App() {
         // We successfully got data from Firestore
         console.log("Setting app state with Firestore data");
         setTotalOpc(userData.totalOpc || 0);
-        setCurrentStreak(userData.currentStreak || 0);
+        
+        // Check if we need to update the streak based on lastLogged date
+        let streak = userData.currentStreak || 0;
+        if (!isOffline) {
+          try {
+            // Only check streak on app load
+            const updatedStreak = await checkAndUpdateStreak(uid, streak);
+            console.log("Streak checked and updated:", updatedStreak);
+            streak = updatedStreak;
+          } catch (error) {
+            console.error("Error checking streak:", error);
+          }
+        }
+        
+        setCurrentStreak(streak);
         setSavedBudget(userData.savedBudget || 45);
         
         // Try to fetch activity items from Firestore
@@ -169,10 +186,13 @@ function App() {
     const newTotal = totalOpc + amount;
     setTotalOpc(newTotal);
     
+    const now = new Date();
+    const today = now.toISOString();
+    
     const newActivity = {
       id: Date.now().toString(),
       description,
-      date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+      date: now.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
       opcEarned: amount
     };
 
@@ -193,6 +213,19 @@ function App() {
       // Save activity to Firestore
       await safeFirestoreOperation(
         () => saveActivityToFirestore(currentUserId, newActivity),
+        false
+      );
+      
+      // Update lastLogged date whenever user logs activity
+      await safeFirestoreOperation(
+        async () => {
+          await updateDoc(doc(db, "users", currentUserId), {
+            lastLogged: today,
+            updatedAt: today
+          });
+          console.log("Last logged date updated:", today);
+          return true;
+        },
         false
       );
     }

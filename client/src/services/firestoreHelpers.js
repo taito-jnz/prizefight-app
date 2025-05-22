@@ -47,18 +47,73 @@ export async function saveOpcToFirestore(userId, opcTotal) {
   }
 }
 
-// Update streak in Firestore
-export async function updateStreakInFirestore(userId, streak) {
+// Update streak in Firestore with lastLogged date
+export async function updateStreakInFirestore(userId, streak, lastLogged = null) {
   try {
-    await updateDoc(doc(db, "users", userId), {
+    const updateData = {
       currentStreak: streak,
       updatedAt: new Date().toISOString()
-    });
-    console.log("Streak updated in Firestore!");
+    };
+    
+    // If lastLogged is provided, update it too
+    if (lastLogged) {
+      updateData.lastLogged = lastLogged;
+    }
+    
+    await updateDoc(doc(db, "users", userId), updateData);
+    console.log("Streak updated in Firestore with lastLogged:", lastLogged);
     return true;
   } catch (error) {
     console.error("Error updating streak in Firestore:", error);
     return false;
+  }
+}
+
+// Check streak based on lastLogged date
+export async function checkAndUpdateStreak(userId, currentStreak) {
+  try {
+    const userData = await getUserDataFromFirestore(userId);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalize to start of day
+    
+    let newStreak = currentStreak;
+    let lastLogged = null;
+    
+    if (userData && userData.lastLogged) {
+      // Convert lastLogged string to Date object
+      const lastLoggedDate = new Date(userData.lastLogged);
+      lastLoggedDate.setHours(0, 0, 0, 0); // Normalize to start of day
+      
+      // Calculate days between
+      const timeDiff = today.getTime() - lastLoggedDate.getTime();
+      const daysDiff = Math.floor(timeDiff / (1000 * 3600 * 24));
+      
+      console.log(`Days since last activity: ${daysDiff}`);
+      
+      if (daysDiff === 0) {
+        // Same day, no streak change
+        console.log("Same day activity, no streak change");
+      } else if (daysDiff === 1) {
+        // Next day, continue streak
+        console.log("Next day activity, continuing streak");
+        newStreak = currentStreak;
+      } else {
+        // 2+ days, reset streak
+        console.log("2+ days since last activity, resetting streak");
+        newStreak = 0;
+      }
+    }
+    
+    // Set lastLogged to today
+    lastLogged = today.toISOString();
+    
+    // Update streak and lastLogged in Firestore
+    await updateStreakInFirestore(userId, newStreak, lastLogged);
+    
+    return newStreak;
+  } catch (error) {
+    console.error("Error checking streak:", error);
+    return currentStreak; // Return unchanged on error
   }
 }
 
